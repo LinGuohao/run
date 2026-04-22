@@ -12,8 +12,8 @@ echo "🚀 启动多GPU并行实验 - 不同max_loop_count值 (Qwen3.5-9B)"
 echo "=================================================="
 
 # 基础配置
-MODEL_PATH="/gpfs/volcano/models/Qwen/Qwen3.5-9B"
-DATASET_PATH="/gpfs/volcano/models/lmms-lab/textvqa"
+MODEL_PATH="/mnt/si002961ale4/default/lgy/guohao/checkpoints/Qwen/Qwen3.5-9B"
+DATASET_PATH="/mnt/si002961ale4/default/lgy/guohao/datasets/wikitext"
 MODEL="Qwen/Qwen3.5-9B"
 MODEL_SHORT="qwen35_9b"
 CACHE_DIR="/hy-tmp/huggingface/hub"
