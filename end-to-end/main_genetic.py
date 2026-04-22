@@ -26,19 +26,44 @@ def seed_everything(seed):
     torch.backends.cudnn.deterministic = True
     torch.cuda.manual_seed_all(seed)
 
-
-def create_calibration_data(tokenizer, ctx_len, samples, seed=42):
-    """Create calibration data from WikiText-2 (following eval_wanda_pruned_ppl.py style)."""
-    from datasets import load_dataset
+# ======================== 修改后 ========================
+def create_calibration_data(tokenizer, ctx_len, samples, dataset_path=None, seed=42):
+    """Create calibration data supporting local path or fallback to WikiText-2."""
+    from datasets import load_dataset, load_from_disk
+    import os
 
     torch.manual_seed(seed)
     np.random.seed(seed)
 
-    print(f"Loading WikiText-2 dataset...")
-    dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
+    if dataset_path and os.path.exists(dataset_path):
+        print(f"Loading local dataset from: {dataset_path}...")
+        try:
+            # 尝试直接读取本地 huggingface dataset 格式
+            dataset = load_dataset(dataset_path, split='train')
+        except Exception as e:
+            # 如果不是原始脚本格式，尝试作为 load_from_disk 读取
+            print(f"Fallback to load_from_disk: {e}")
+            dataset = load_from_disk(dataset_path)
+            if 'train' in dataset:
+                dataset = dataset['train']
+    else:
+        print(f"Loading WikiText-2 dataset from HuggingFace Hub...")
+        dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
+
+    # 动态匹配文本列 (兼容 wikitext 和 textvqa 等不同数据集)
+    text_column = 'text'
+    if text_column not in dataset.column_names:
+        possible_columns = ['question', 'content', 'sentence']
+        for col in possible_columns:
+            if col in dataset.column_names:
+                text_column = col
+                break
+        if text_column not in dataset.column_names:
+            text_column = dataset.column_names[0] # 保底策略
+        print(f"  [Info] Using column '{text_column}' for calibration data.")
 
     # Concatenate all text
-    text = "\n\n".join(dataset['text'])
+    text = "\n\n".join([str(item) for item in dataset[text_column] if item])
 
     # Tokenize
     print(f"  Tokenizing...")
@@ -97,6 +122,8 @@ def main():
                         help='Maximum parameter ratio')
     parser.add_argument('--max_loop_count', type=int, default=2,
                         help='Maximum loop count for modules')
+    parser.add_argument('--dataset_path', type=str, default=None,
+                        help='Path to local dataset directory')
     parser.add_argument('--use_elite_pool', type=lambda x: x.lower() == 'true', 
                         default=True,
                         help='Whether to use elite seed pool (default: True). Set to False for fresh exploration.')
@@ -198,12 +225,14 @@ def main():
 
     model.eval()
 
+    # ======================== 修改后 ========================
     # Create calibration data
-    print("\\nCreating calibration data...")
+    print("\nCreating calibration data...")
     calibration_data, n_calib_samples, calib_seqlen = create_calibration_data(
         tokenizer,
         args.ctx_len,
         args.calibration_samples,
+        dataset_path=args.dataset_path,  # <--- 加入这一行
         seed=args.seed
     )
 

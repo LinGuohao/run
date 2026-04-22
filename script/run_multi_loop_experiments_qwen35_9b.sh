@@ -12,6 +12,8 @@ echo "🚀 启动多GPU并行实验 - 不同max_loop_count值 (Qwen3.5-9B)"
 echo "=================================================="
 
 # 基础配置
+MODEL_PATH="/gpfs/volcano/models/Qwen/Qwen3.5-9B"
+DATASET_PATH="/gpfs/volcano/models/lmms-lab/textvqa"
 MODEL="Qwen/Qwen3.5-9B"
 MODEL_SHORT="qwen35_9b"
 CACHE_DIR="/hy-tmp/huggingface/hub"
@@ -100,7 +102,8 @@ for i in {0..3}; do
         #fi
 
         /usr/local/miniconda3/envs/proxsparse/bin/python end-to-end/main_genetic.py \
-            --model ${MODEL} \
+            --model ${MODEL_PATH} \
+            --dataset_path ${DATASET_PATH} \
             --cache_dir ${CACHE_DIR} \
             --population_size ${POPULATION_SIZE} \
             --max_generations ${MAX_GENERATIONS} \
