@@ -50,20 +50,8 @@ def create_calibration_data(tokenizer, ctx_len, samples, dataset_path=None, seed
         print(f"Loading WikiText-2 dataset from HuggingFace Hub...")
         dataset = load_dataset('wikitext', 'wikitext-2-raw-v1', split='train')
 
-    # 动态匹配文本列 (兼容 wikitext 和 textvqa 等不同数据集)
-    text_column = 'text'
-    if text_column not in dataset.column_names:
-        possible_columns = ['question', 'content', 'sentence']
-        for col in possible_columns:
-            if col in dataset.column_names:
-                text_column = col
-                break
-        if text_column not in dataset.column_names:
-            text_column = dataset.column_names[0] # 保底策略
-        print(f"  [Info] Using column '{text_column}' for calibration data.")
-
     # Concatenate all text
-    text = "\n\n".join([str(item) for item in dataset[text_column] if item])
+    text = "\n\n".join(dataset['text'])
 
     # Tokenize
     print(f"  Tokenizing...")
