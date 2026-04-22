@@ -87,7 +87,7 @@ for i in {0..3}; do
         echo "============================================================================"
         echo ""
 
-        cd /hy-tmp/ProxSparse-main
+        #cd /hy-tmp/ProxSparse-main
 
         # 检查是否存在checkpoint，如果存在则resume
         CHECKPOINT_FILE="${OUTPUT_DIR}/checkpoints/checkpoint_latest.json"
